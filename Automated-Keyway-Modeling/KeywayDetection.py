@@ -50,24 +50,24 @@ if(args.no_arg == False):
 		(args.max_threshold > 255) | (args.max_threshold < 0) | 
 		(args.step_size_threshold > (args.max_threshold - args.min_threshold)) | 
 		(args.min_threshold > args.max_threshold)):
-		print 'Error: threshold value out of range'
+		print ('Error: threshold value out of range')
 		sys.exit(1)
 	if(os.path.isfile(args.input) == False):
-		print 'Error: input file does not exist'
+		print ('Error: input file does not exist')
 		sys.exit(1)
 	if(os.path.isfile(args.output) == True):
-		print 'Warning: output file exists'
-		print 'Would you like to overwrite? (y/n)'
+		print ('Warning: output file exists')
+		print ('Would you like to overwrite? (y/n)')
 		input_data = raw_input()
 		if((input_data == 'y') | (input_data == 'yes')) == False:
 			sys.exit(1)
 	if(os.path.isfile(args.generic_scad) == False):
-		print 'Error: generic_scad file does not exist'
+		print ('Error: generic_scad file does not exist')
 		sys.exit(1)
 #END ARG CHECKING
 
 #READ GENERIC SCAD TEMPLATE
-print "Reading Generic SCAD Template"
+print ("Reading Generic SCAD Template")
 f = open(args.generic_scad, 'r+')
 generic_scad = f.read()
 f.close()
@@ -80,16 +80,16 @@ exif = open(args.input, 'rb')
 exif_data = exifread.process_file(exif, details=False)
 try:
         exif_orientation = str(exif_data['Image Orientation'])
-except KeyError, e:
-#       print "EXIF DATA: NOT FOUND"
+except KeyError:
+#       print ("EXIF DATA: NOT FOUND")
         exif_orientation = str("NotRotated A")
-#print "EXIF DATA: FOUND"
+#print ("EXIF DATA: FOUND")
 exif_orientation_array = exif_orientation.split(" ")
 threshold_array = []
 area_array = []
 first_run = True
 if(args.threshold == -1):
-	print "Determining Optimal Thresholding Value"
+	print ("Determining Optimal Thresholding Value")
 	for threshold in range(args.min_threshold, args.max_threshold, args.step_size_threshold):
 		ret,new_img = cv2.threshold(img,threshold,255,cv2.THRESH_BINARY)
 		labels = measure.label(new_img)
@@ -123,12 +123,12 @@ if(args.threshold == -1):
 		last_area = len(region_image)*len(region_image[1])
 		area_array.append(last_area)
 		last_threshold = threshold
-	print "Thresholding Image"
+	print ("Thresholding Image")
 	if(args.print_threshold):
-		print 'Automatically detected threshold value:'
-		print last_threshold
+		print ('Automatically detected threshold value:')
+		print (last_threshold)
 else:
-	print "Thresholding Image"
+	print ("Thresholding Image")
 	ret,new_img = cv2.threshold(img,args.threshold,255,cv2.THRESH_BINARY)
 	labels = measure.label(new_img)
 	max = 0
@@ -142,7 +142,7 @@ else:
 	image = region_image
 #END THRESHOLDING
 #for i in range(0, len(area_array)):
-	#print "%s %.23f" % (threshold_array[i], float(area_array[i])/(float(len(new_img)*len(new_img[1]))))
+	#print ("%s %.23f" % (threshold_array[i], float(area_array[i])/(float(len(new_img)*len(new_img[1])))))
 
 
 #FIX IMAGE ROTATION AND CONVERT TO OPENCV2 FORMAT
@@ -190,7 +190,7 @@ channels = ''
 channel_data = []
 num_elems = 0
 
-print "Determining Keyway Profile"
+print ("Determining Keyway Profile")
 if (args.overhangs == False):
 	for y in range(0, len(cv_image)):
 		first_wall_found = False
@@ -221,7 +221,7 @@ if (args.overhangs == True):
 				num_elems += 1
 
 
-print "Optimizing Keyway Profile"
+print ("Optimizing Keyway Profile")
 channel_data_classifier = 1
 for i in range(0, len(channel_data)):
 	if(i - 1 >= 0):	
@@ -241,7 +241,7 @@ last_index = 0
 first_index = 0
 first_j = False
 
-print "Converting Keyway Profile Into OpenSCAD" 
+print ("Converting Keyway Profile Into OpenSCAD" )
 for i in range(channel_data_classifier, max_channel):
 	counter = 0
 	first_j = False
@@ -256,7 +256,7 @@ for i in range(channel_data_classifier, max_channel):
 			break
 	channels += (FMT % (channel_data[first_index][0] + args.trim, channel_data[first_index][1], channel_data[first_index][2] - args.trim*2, counter))
 
-print "Creating .scad File"
+print ("Creating .scad File")
 generic_scad = generic_scad.replace('###SCALE_FACTOR###', SCALE_FACTOR % (float(args.keyway_height)/float(len(cv_image))))
 generic_scad = generic_scad.replace('###CHANNELS###', channels)
 generic_scad = generic_scad.replace('###BLADE_LENGTH###', BLADE_LENGTH % (args.blade_length - (7 - len(args.key_cuts))*.15))
@@ -276,6 +276,6 @@ f.close()
 
 #RENDER SCAD
 if(args.disable_stl_output == False):
-	print "Rendering .stl File (This Will Take Awhile)"
+	print ("Rendering .stl File (This Will Take Awhile)")
 	OPENSCAD_CALL = '''openscad -o %s %s 2>OpenSCAD_output.log 1>OpenSCAD_output.log'''
 	subprocess.Popen(OPENSCAD_CALL % (args.output_stl, args.scad_output_file), shell=True, stdout=subprocess.PIPE).stdout.read()
